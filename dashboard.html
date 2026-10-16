@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#1a56db">
+<title>Min översikt</title>
+<script src="drive-sync.js"></script>
+<style>
+:root {
+  --accent: #1a56db;
+  --accent-soft: #e8f0fe;
+  --teal: #0f766e;
+  --teal-soft: #e6f2f0;
+  --ok: #15a34a;
+  --soon: #d97706;
+  --urgent: #dc2626;
+  --text: #1a1a1a;
+  --muted: #6b7280;
+  --border: #e5e7eb;
+  --surface: #ffffff;
+  --bg: #f5f6f8;
+  --bar-bg: #eef0f3;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --accent: #6b9bff;
+    --accent-soft: #1d2a44;
+    --teal: #3fb9ab;
+    --teal-soft: #15302d;
+    --text: #ececec;
+    --muted: #9ca3af;
+    --border: #2c2f36;
+    --surface: #1b1d22;
+    --bg: #111215;
+    --bar-bg: #2a2d34;
+  }
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  background: var(--bg); color: var(--text);
+  padding: env(safe-area-inset-top, 0) 0 env(safe-area-inset-bottom, 0);
+  -webkit-font-smoothing: antialiased;
+}
+.topbar {
+  position: sticky; top: 0; z-index: 10;
+  background: var(--surface); border-bottom: 1px solid var(--border);
+  padding: 12px 16px; display: flex; align-items: center; justify-content: space-between; gap: 8px;
+}
+.topbar h1 { font-size: 17px; font-weight: 600; }
+.nav { display: flex; gap: 6px; }
+.nav a {
+  font-size: 13px; text-decoration: none; color: var(--text);
+  border: 1px solid var(--border); border-radius: 8px; padding: 5px 9px; background: var(--bg);
+}
+main { max-width: 720px; margin: 0 auto; padding: 16px; }
+.periods { display: flex; gap: 6px; margin-bottom: 14px; overflow-x: auto; }
+.periods button {
+  flex: 0 0 auto; font-size: 13px; padding: 7px 12px; border-radius: 999px;
+  border: 1px solid var(--border); background: var(--surface); color: var(--text); cursor: pointer;
+}
+.periods button.active { background: var(--accent); border-color: var(--accent); color: #fff; }
+.tiles { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 14px; }
+.tile { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 14px; }
+.tile .lbl { font-size: 12px; color: var(--muted); margin-bottom: 4px; }
+.tile .val { font-size: 22px; font-weight: 600; font-variant-numeric: tabular-nums; }
+.tile .sub { font-size: 12px; margin-top: 3px; color: var(--muted); }
+.up { color: var(--urgent) !important; }
+.down { color: var(--ok) !important; }
+.card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 16px; margin-bottom: 14px; }
+.card h2 { font-size: 15px; font-weight: 600; margin-bottom: 12px; display: flex; align-items: center; gap: 6px; }
+.card h2 small { font-weight: 400; color: var(--muted); font-size: 12px; margin-left: auto; }
+.months { display: flex; align-items: flex-end; gap: 8px; height: 150px; }
+.month { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; height: 100%; gap: 4px; }
+.month .bar { width: 100%; max-width: 46px; background: var(--accent); border-radius: 6px 6px 2px 2px; min-height: 2px; }
+.month.current .bar { background: var(--accent); }
+.month:not(.current) .bar { opacity: .55; }
+.month .amt { font-size: 10px; color: var(--muted); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.month .name { font-size: 11px; color: var(--muted); text-transform: capitalize; }
+.row { margin-bottom: 11px; }
+.row:last-child { margin-bottom: 0; }
+.row-top { display: flex; justify-content: space-between; font-size: 14px; margin-bottom: 5px; gap: 8px; }
+.row-top span:last-child { font-variant-numeric: tabular-nums; color: var(--muted); white-space: nowrap; }
+.track { height: 8px; background: var(--bar-bg); border-radius: 99px; overflow: hidden; }
+.fill { height: 100%; background: var(--accent); border-radius: 99px; }
+.fill.teal { background: var(--teal); }
+.empty { font-size: 14px; color: var(--muted); padding: 6px 0; line-height: 1.5; }
+.angra-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 12px; }
+.mini { background: var(--teal-soft); border-radius: 10px; padding: 12px; }
+.mini .val { font-size: 19px; font-weight: 600; font-variant-numeric: tabular-nums; }
+.mini .lbl { font-size: 12px; color: var(--muted); margin-top: 2px; }
+.deadline { display: flex; align-items: center; gap: 10px; padding: 9px 0; border-top: 1px solid var(--border); font-size: 14px; }
+.deadline:first-child { border-top: 0; }
+.dot { width: 9px; height: 9px; border-radius: 50%; flex: 0 0 auto; }
+.deadline .what { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.deadline .when { color: var(--muted); font-size: 13px; white-space: nowrap; }
+.export { display: flex; gap: 8px; flex-wrap: wrap; }
+.export button {
+  font-size: 14px; padding: 9px 13px; border-radius: 8px; cursor: pointer;
+  border: 1px solid var(--border); background: var(--bg); color: var(--text);
+}
+.footnote { text-align: center; font-size: 12px; color: var(--muted); padding: 8px 0 20px; }
+@media print {
+  .topbar .nav, .periods, .export, #drive-card { display: none !important; }
+  body { background: #fff; }
+  .card, .tile { break-inside: avoid; }
+}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <h1>📊 Min översikt</h1>
+  <div class="nav">
+    <a href="kvitto-app.html">🧾 Kvitton</a>
+    <a href="angra-app.html">↺ Ångra</a>
+  </div>
+</div>
+
+<main>
+  <div class="periods" id="periods">
+    <button data-p="month" class="active">Denna månad</button>
+    <button data-p="3m">3 månader</button>
+    <button data-p="year">I år</button>
+    <button data-p="all">Allt</button>
+  </div>
+
+  <div class="tiles" id="tiles"></div>
+
+  <div class="card">
+    <h2>Per månad <small>senaste 6 månaderna</small></h2>
+    <div class="months" id="months"></div>
+  </div>
+
+  <div class="card">
+    <h2>Kategorier <small id="cat-period"></small></h2>
+    <div id="cats"></div>
+  </div>
+
+  <div class="card">
+    <h2>Butiker <small>mest pengar</small></h2>
+    <div id="stores"></div>
+  </div>
+
+  <div class="card">
+    <h2>↺ Returer</h2>
+    <div class="angra-grid" id="angra-grid"></div>
+    <div id="deadlines"></div>
+  </div>
+
+  <div class="card">
+    <h2>Exportera</h2>
+    <div class="export">
+      <button type="button" onclick="exportReceipts()">⤓ Kvitton (Excel)</button>
+      <button type="button" onclick="exportAngra()">⤓ Returer (Excel)</button>
+      <button type="button" onclick="window.print()">🖨 Skriv ut / PDF</button>
+    </div>
+  </div>
+
+  <div class="card" id="drive-card">
+    <h2>☁️ Google Drive</h2>
+    <div id="drive-sync-box"></div>
+  </div>
+
+  <p class="footnote" id="footnote"></p>
+</main>
+
+<script>
+const DAY = 86400000;
+let period = 'month';
+try { period = localStorage.getItem('dash_period') || 'month'; } catch (e) {}
+
+function readJSON(k, def) { try { return JSON.parse(localStorage.getItem(k) || 'null') ?? def; } catch (e) { return def; } }
+function esc(s) { return String(s ?? '').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c])); }
+function money(n, cur) { return Math.round(n).toLocaleString('sv-SE') + ' ' + cur; }
+function parseDate(iso) { if (!iso) return null; const p = String(iso).slice(0, 10).split('-'); const d = new Date(+p[0], +p[1] - 1, +p[2]); return isNaN(d) ? null : d; }
+
+function data() {
+  const kSettings = readJSON('kvitto_settings', {});
+  const aSettings = readJSON('angra_settings_v1', {});
+  return {
+    receipts: readJSON('kvitto_receipts', []).filter(r => parseDate(r.date)),
+    angra: readJSON('angra_items_v1', []).filter(a => parseDate(a.date)),
+    kCur: kSettings.currency || 'kr',
+    aCur: aSettings.currency || '€'
+  };
+}
+
+function periodRange(p) {
+  const now = new Date();
+  if (p === 'month') return { from: new Date(now.getFullYear(), now.getMonth(), 1), label: now.toLocaleDateString('sv-SE', { month: 'long' }) };
+  if (p === '3m') return { from: new Date(now.getFullYear(), now.getMonth() - 2, 1), label: 'senaste 3 mån' };
+  if (p === 'year') return { from: new Date(now.getFullYear(), 0, 1), label: String(now.getFullYear()) };
+  return { from: new Date(0), label: 'all tid' };
+}
+function prevRange(p) {
+  const now = new Date();
+  if (p === 'month') return [new Date(now.getFullYear(), now.getMonth() - 1, 1), new Date(now.getFullYear(), now.getMonth(), 1)];
+  if (p === '3m') return [new Date(now.getFullYear(), now.getMonth() - 5, 1), new Date(now.getFullYear(), now.getMonth() - 2, 1)];
+  if (p === 'year') return [new Date(now.getFullYear() - 1, 0, 1), new Date(now.getFullYear() - 1, now.getMonth(), now.getDate() + 1)];
+  return null;
+}
+
+function render() {
+  const d = data();
+  const { from, label } = periodRange(period);
+  const inPeriod = d.receipts.filter(r => parseDate(r.date) >= from);
+  const total = inPeriod.reduce((s, r) => s + Number(r.total || 0), 0);
+
+  document.querySelectorAll('#periods button').forEach(b => b.classList.toggle('active', b.dataset.p === period));
+
+  // Tiles
+  let compare = '';
+  const pr = prevRange(period);
+  if (pr) {
+    const prevTotal = d.receipts.filter(r => { const t = parseDate(r.date); return t >= pr[0] && t < pr[1]; })
+      .reduce((s, r) => s + Number(r.total || 0), 0);
+    if (prevTotal > 0) {
+      const pct = Math.round((total - prevTotal) / prevTotal * 100);
+      const word = period === 'month' ? 'förra månaden' : period === '3m' ? 'förra perioden' : 'samma tid i fjol';
+      compare = `<div class="sub ${pct > 0 ? 'up' : 'down'}">${pct > 0 ? '▲' : '▼'} ${Math.abs(pct)} % mot ${word}</div>`;
+    }
+  }
+  const avg = inPeriod.length ? total / inPeriod.length : 0;
+  const biggest = inPeriod.reduce((m, r) => Number(r.total || 0) > Number(m?.total || 0) ? r : m, null);
+  document.getElementById('tiles').innerHTML = `
+    <div class="tile"><div class="lbl">Spenderat, ${esc(label)}</div><div class="val">${money(total, d.kCur)}</div>${compare}</div>
+    <div class="tile"><div class="lbl">Antal köp</div><div class="val">${inPeriod.length}</div><div class="sub">${inPeriod.length ? 'snitt ' + money(avg, d.kCur) : ''}</div></div>
+    <div class="tile" style="grid-column: span 2"><div class="lbl">Största köpet</div><div class="val" style="font-size:17px">${biggest ? esc(biggest.store || (biggest.items && biggest.items[0] && biggest.items[0].name) || 'Köp') + ' · ' + money(biggest.total, d.kCur) : '–'}</div>${biggest ? `<div class="sub">${esc(biggest.date)}</div>` : ''}</div>`;
+
+  // Months
+  const now = new Date();
+  const months = [];
+  for (let i = 5; i >= 0; i--) {
+    const start = new Date(now.getFullYear(), now.getMonth() - i, 1);
+    const end = new Date(now.getFullYear(), now.getMonth() - i + 1, 1);
+    const sum = d.receipts.filter(r => { const t = parseDate(r.date); return t >= start && t < end; }).reduce((s, r) => s + Number(r.total || 0), 0);
+    months.push({ start, sum, current: i === 0 });
+  }
+  const maxM = Math.max(1, ...months.map(m => m.sum));
+  document.getElementById('months').innerHTML = months.map(m => `
+    <div class="month ${m.current ? 'current' : ''}">
+      <div class="amt">${m.sum ? Math.round(m.sum).toLocaleString('sv-SE') : ''}</div>
+      <div class="bar" style="height:${Math.round(m.sum / maxM * 100)}%"></div>
+      <div class="name">${m.start.toLocaleDateString('sv-SE', { month: 'short' }).replace('.', '')}</div>
+    </div>`).join('');
+
+  // Categories
+  document.getElementById('cat-period').textContent = label;
+  document.getElementById('cats').innerHTML = bars(group(inPeriod, r => r.category || 'Övrigt'), d.kCur, '', 'Inga köp under den här perioden.');
+
+  // Stores
+  document.getElementById('stores').innerHTML = bars(group(inPeriod, r => (r.store || '').trim() || 'Okänd butik').slice(0, 6), d.kCur, 'teal', 'Inga köp under den här perioden.');
+
+  // Ångra
+  const today = new Date(); today.setHours(0, 0, 0, 0);
+  const lastDay = a => parseDate(a.date).getTime() + (Number(a.days) || 30) * DAY;
+  const daysLeft = a => Math.round((lastDay(a) - today.getTime()) / DAY);
+  const active = d.angra.filter(a => !a.returned && daysLeft(a) >= 0);
+  const urgent = active.filter(a => daysLeft(a) <= 2);
+  const wantBack = active.filter(a => String(a.name || '').startsWith('↩️'));
+  const returned = d.angra.filter(a => a.returned);
+  const sum = arr => arr.reduce((s, a) => s + Number(a.price || 0), 0);
+  document.getElementById('angra-grid').innerHTML = `
+    <div class="mini"><div class="val">${active.length}</div><div class="lbl">under bevakning · ${money(sum(active), d.aCur)}</div></div>
+    <div class="mini"><div class="val" style="${urgent.length ? 'color:var(--urgent)' : ''}">${urgent.length}</div><div class="lbl">går ut inom 2 dagar</div></div>
+    <div class="mini"><div class="val">${wantBack.length}</div><div class="lbl">vill lämna tillbaka</div></div>
+    <div class="mini"><div class="val">${money(sum(returned), d.aCur)}</div><div class="lbl">tillbaka från ${returned.length} retur${returned.length === 1 ? '' : 'er'}</div></div>`;
+
+  const upcoming = [...active].sort((a, b) => daysLeft(a) - daysLeft(b)).slice(0, 5);
+  document.getElementById('deadlines').innerHTML = upcoming.length
+    ? upcoming.map(a => {
+        const dl = daysLeft(a);
+        const col = dl <= 2 ? 'var(--urgent)' : dl <= 7 ? 'var(--soon)' : 'var(--ok)';
+        const when = dl === 0 ? 'idag' : dl === 1 ? 'imorgon' : 'om ' + dl + ' dagar';
+        return `<div class="deadline"><span class="dot" style="background:${col}"></span><span class="what">${esc(a.name)}${a.store ? ' <span style="color:var(--muted)">· ' + esc(a.store) + '</span>' : ''}</span><span class="when">${when}</span></div>`;
+      }).join('')
+    : '<div class="empty">Inga köp med returrätt just nu.</div>';
+
+  document.getElementById('footnote').textContent =
+    `${d.receipts.length} kvitton och ${d.angra.length} returbevakningar totalt`;
+}
+
+function group(list, keyFn) {
+  const m = {};
+  list.forEach(r => { const k = keyFn(r); m[k] = (m[k] || 0) + Number(r.total || 0); });
+  return Object.entries(m).sort((a, b) => b[1] - a[1]);
+}
+function bars(entries, cur, cls, emptyText) {
+  if (!entries.length) return `<div class="empty">${emptyText}</div>`;
+  const max = Math.max(1, ...entries.map(e => e[1]));
+  return entries.map(([name, amt]) => `
+    <div class="row">
+      <div class="row-top"><span>${esc(name)}</span><span>${money(amt, cur)}</span></div>
+      <div class="track"><div class="fill ${cls}" style="width:${Math.max(2, Math.round(amt / max * 100))}%"></div></div>
+    </div>`).join('');
+}
+
+// Export som CSV med semikolon, så att svenska Excel öppnar den rätt
+function csv(rows) {
+  const cell = v => { const s = String(v ?? ''); return /[";\n]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s; };
+  return '﻿' + rows.map(r => r.map(cell).join(';')).join('\r\n');
+}
+function download(name, text) {
+  const blob = new Blob([text], { type: 'text/csv;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = name; document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
+const num = n => String(Number(n || 0).toFixed(2)).replace('.', ',');
+function exportReceipts() {
+  const d = data();
+  const rows = [['Datum', 'Butik', 'Kategori', 'Vad', 'Belopp (' + d.kCur + ')']];
+  [...d.receipts].sort((a, b) => String(a.date).localeCompare(String(b.date))).forEach(r =>
+    rows.push([r.date, r.store || '', r.category || '', (r.items || []).map(i => i.name).join(', '), num(r.total)]));
+  download('kvitton-' + new Date().toISOString().slice(0, 10) + '.csv', csv(rows));
+}
+function exportAngra() {
+  const d = data();
+  const rows = [['Köpt', 'Vad', 'Butik', 'Pris (' + d.aCur + ')', 'Returrätt (dagar)', 'Sista returdag', 'Status']];
+  d.angra.forEach(a => {
+    const last = new Date(parseDate(a.date).getTime() + (Number(a.days) || 30) * DAY).toLocaleDateString('sv-SE');
+    const status = a.returned ? 'Returnerad' : String(a.name || '').startsWith('↩️') ? 'Ska lämnas tillbaka' : a.satisfiedAsked ? 'Nöjd' : 'Bevakas';
+    rows.push([a.date, String(a.name || '').replace('↩️ ', ''), a.store || '', num(a.price), a.days, last, status]);
+  });
+  download('returer-' + new Date().toISOString().slice(0, 10) + '.csv', csv(rows));
+}
+
+document.getElementById('periods').addEventListener('click', e => {
+  const b = e.target.closest('button'); if (!b) return;
+  period = b.dataset.p;
+  try { localStorage.setItem('dash_period', period); } catch (e) {}
+  render();
+});
+window.onDriveSyncUpdate = render;
+document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') render(); });
+render();
+</script>
+</body>
+</html>

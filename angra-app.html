@@ -178,6 +178,7 @@ body {
 }
 .item-btn.cal { color: var(--brand); border-color: var(--brand); }
 .item-btn.edit { color: var(--text-muted); }
+.item-btn.ret { color: var(--ok); border-color: var(--ok); }
 .item-btn.del { color: var(--text-muted); }
 .item-badge {
   flex-shrink: 0; padding: 12px 14px; display: flex;
@@ -286,7 +287,10 @@ body {
     <div class="topbar-mark">↺</div>
     <div class="topbar-title">Ångra i tid</div>
   </div>
-  <button class="settings-btn" onclick="showView('settings')">⚙️</button>
+  <div style="display:flex;align-items:center;gap:2px">
+    <a class="settings-btn" href="dashboard.html" aria-label="Översikt" style="text-decoration:none">📊</a>
+    <button class="settings-btn" onclick="showView('settings')">⚙️</button>
+  </div>
 </div>
 
 <div class="tabs">
@@ -689,6 +693,7 @@ function renderList() {
         </div>
         <div class="item-actions">
           ${dl >= 0 ? `<button class="item-btn cal" onclick="downloadICS('${it.id}')">⤓ Kalender</button>` : ''}
+          ${dl >= 0 ? `<button class="item-btn ret" onclick="markReturned('${it.id}')">✅ Returnerad</button>` : ''}
           <button class="item-btn edit" onclick="openEdit('${it.id}')">✏️ Redigera</button>
           <button class="item-btn del" onclick="deleteItem('${it.id}')">🗑️</button>
         </div>
@@ -729,6 +734,19 @@ function markSatisfied(id, happy) {
   } else {
     showToast('✅ Bra! Markerat som nöjd.');
   }
+}
+
+function markReturned(id) {
+  const it = items.find(x => x.id === id);
+  if (!it) return;
+  if (!confirm('Har du lämnat tillbaka ' + it.name.replace('↩️ ', '') + '?')) return;
+  it.returned = true;
+  it.returnedAt = Date.now();
+  it.satisfiedAsked = true;
+  saveData();
+  renderList();
+  try { renderStats(); } catch (e) {}
+  showToast('✅ Snyggt! ' + (it.price ? cur() + it.price.toFixed(2) + ' tillbaka.' : 'Markerad som returnerad.'));
 }
 
 function deleteItem(id) {
