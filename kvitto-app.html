@@ -698,6 +698,7 @@ window.onDriveSyncUpdate = function () {
 let settings = JSON.parse(localStorage.getItem('kvitto_settings') || '{"autoAnalyze":true,"currency":"kr"}');
 if (!settings.currency) settings.currency = settings.showEuro ? '€' : 'kr';
 
+function fmtMoney(n) { return Number(n || 0).toFixed(2); }
 function getCurrency() { return settings.currency || 'kr'; }
 
 function setCurrency(val) {
@@ -923,7 +924,7 @@ function renderOverview() {
     return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
   });
   const monthTotal = thisMonth.reduce((s, r) => s + Number(r.total || 0), 0);
-  document.getElementById('stat-month').textContent = Math.round(monthTotal) + ' ' + getCurrency();
+  document.getElementById('stat-month').textContent = fmtMoney(monthTotal) + ' ' + getCurrency();
   document.getElementById('stat-count').textContent = receipts.length;
 
   if (!receipts.length) {
@@ -939,7 +940,7 @@ function renderOverview() {
           <span class="receipt-store">${escHtml(r.store || '?')}</span>
           <span class="receipt-date">${r.date || ''} · ${r.category || ''}</span>
         </div>
-        <span class="receipt-amount">${Number(r.total||0).toFixed(0)} ${getCurrency()}</span>
+        <span class="receipt-amount">${fmtMoney(r.total)} ${getCurrency()}</span>
       </div>
       <div class="receipt-actions">
         <button class="receipt-action-btn" onclick="openEditModal(${r.id})">✏️ Redigera</button>
@@ -968,7 +969,7 @@ function renderCategories() {
     <div class="cat-row">
       <div class="cat-top">
         <span class="cat-name">${name}</span>
-        <span class="cat-amount">${Math.round(amt)} ${getCurrency()}</span>
+        <span class="cat-amount">${fmtMoney(amt)} ${getCurrency()}</span>
       </div>
       <div class="cat-bar-bg">
         <div class="cat-bar" style="width:${Math.round(amt/max*100)}%"></div>

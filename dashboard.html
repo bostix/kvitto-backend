@@ -173,7 +173,7 @@ try { period = localStorage.getItem('dash_period') || 'month'; } catch (e) {}
 
 function readJSON(k, def) { try { return JSON.parse(localStorage.getItem(k) || 'null') ?? def; } catch (e) { return def; } }
 function esc(s) { return String(s ?? '').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c])); }
-function money(n, cur) { return Math.round(n).toLocaleString('sv-SE') + ' ' + cur; }
+function money(n, cur) { return Number(n || 0).toLocaleString('sv-SE', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' ' + cur; }
 function parseDate(iso) { if (!iso) return null; const p = String(iso).slice(0, 10).split('-'); const d = new Date(+p[0], +p[1] - 1, +p[2]); return isNaN(d) ? null : d; }
 
 function data() {
