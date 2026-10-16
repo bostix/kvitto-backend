@@ -4,7 +4,7 @@
  */
 (function () {
   // Klient-ID från Google Cloud Console (OAuth-klient, typ Webbapplikation)
-  const CLIENT_ID = '';
+  const CLIENT_ID = '990586145507-ml2njprnn0kpprmjaq6llspp38q2ta06.apps.googleusercontent.com';
 
   const SCOPE = 'https://www.googleapis.com/auth/drive.file';
   const FILE_NAME = 'kvittoappen-data.json';
