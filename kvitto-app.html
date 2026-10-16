@@ -494,6 +494,10 @@ body {
       <span id="scan-btn-text">Analysera kvitto</span>
     </button>
 
+    <button class="scan-btn" type="button" onclick="openManualModal()" style="margin-top:10px;background:transparent;color:var(--text);border:1px solid var(--border);">
+      ✍️ Lägg till utan kvitto
+    </button>
+
     <div class="loading" id="loading">
       <div class="spinner"></div>
       <p id="loading-text">Analyserar kvitto...</p>
@@ -629,7 +633,8 @@ body {
 <!-- Edit modal -->
 <div class="modal-overlay" id="edit-modal" onclick="closeEditModal(event)">
   <div class="modal-box">
-    <div class="modal-title">✏️ Redigera kvitto</div>
+    <div class="modal-title" id="edit-title">✏️ Redigera kvitto</div>
+    <div class="modal-field" id="edit-item-field" style="display:none"><label>Vad köpte du?</label><input id="edit-item" type="text" placeholder="T.ex. jacka, hörlurar"></div>
     <div class="modal-field"><label>Butik</label><input id="edit-store" type="text"></div>
     <div class="modal-field"><label>Datum</label><input id="edit-date" type="date"></div>
     <div class="modal-field"><label>Totalt</label><input id="edit-total" type="number" step="0.01"></div>
@@ -966,6 +971,8 @@ function openEditModal(id) {
   const r = receipts.find(x => x.id === id);
   if (!r) return;
   editingId = id;
+  document.getElementById('edit-title').textContent = '✏️ Redigera kvitto';
+  document.getElementById('edit-item-field').style.display = 'none';
   document.getElementById('edit-store').value = r.store || '';
   document.getElementById('edit-date').value = r.date || '';
   document.getElementById('edit-total').value = r.total || '';
@@ -977,7 +984,41 @@ function closeEditModal(e) {
   document.getElementById('edit-modal').classList.remove('open');
   editingId = null;
 }
+function openManualModal() {
+  editingId = 'new';
+  document.getElementById('edit-title').textContent = '✍️ Lägg till köp';
+  document.getElementById('edit-item-field').style.display = '';
+  document.getElementById('edit-item').value = '';
+  document.getElementById('edit-store').value = '';
+  document.getElementById('edit-date').value = new Date().toISOString().slice(0,10);
+  document.getElementById('edit-total').value = '';
+  document.getElementById('edit-category').value = 'Övrigt';
+  document.getElementById('edit-modal').classList.add('open');
+  setTimeout(() => document.getElementById('edit-item').focus(), 100);
+}
 function saveEdit() {
+  if (editingId === 'new') {
+    const item = document.getElementById('edit-item').value.trim();
+    const store = document.getElementById('edit-store').value.trim();
+    const total = parseFloat(document.getElementById('edit-total').value) || 0;
+    if (!item && !store) { alert('Skriv vad du köpte eller var du köpte det.'); return; }
+    receipts.unshift({
+      id: Date.now(),
+      store: store,
+      date: document.getElementById('edit-date').value || new Date().toISOString().slice(0,10),
+      total: total,
+      category: document.getElementById('edit-category').value,
+      items: item ? [{ name: item, price: total }] : [],
+      manual: true
+    });
+    localStorage.setItem('kvitto_receipts', JSON.stringify(receipts));
+    document.getElementById('edit-modal').classList.remove('open');
+    editingId = null;
+    renderOverview();
+    renderCategories();
+    switchTab('overview');
+    return;
+  }
   const r = receipts.find(x => x.id === editingId);
   if (!r) return;
   r.store = document.getElementById('edit-store').value.trim();
