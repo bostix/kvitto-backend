@@ -456,6 +456,7 @@ body {
 }
 .no-key-banner a { color: var(--accent); text-decoration: underline; cursor: pointer; }
 </style>
+<script src="drive-sync.js"></script>
 </head>
 <body>
 
@@ -593,6 +594,11 @@ body {
     </div>
 
     <div class="settings-section">
+      <div class="settings-header">☁️ Google Drive</div>
+      <div class="settings-row"><div id="drive-sync-box"></div></div>
+    </div>
+
+    <div class="settings-section">
       <div class="settings-header">Data</div>
       <div class="settings-row">
         <div class="settings-label">Exportera data</div>
@@ -607,7 +613,7 @@ body {
     </div>
 
     <div style="text-align:center;padding:16px;font-size:12px;color:var(--text-muted)">
-      Kvittoappen v2.0 · Data sparas lokalt
+      Kvittoappen v2.1
     </div>
   </div>
 </div>
@@ -683,6 +689,11 @@ let lang = 'sv';
 let imageBase64 = null;
 let pendingResult = null;
 let receipts = JSON.parse(localStorage.getItem('kvitto_receipts') || '[]');
+window.onDriveSyncUpdate = function () {
+  try { receipts = JSON.parse(localStorage.getItem('kvitto_receipts') || '[]'); } catch (e) {}
+  if (typeof renderOverview === 'function') renderOverview();
+  if (typeof renderCategories === 'function') renderCategories();
+};
 let settings = JSON.parse(localStorage.getItem('kvitto_settings') || '{"autoAnalyze":true,"currency":"kr"}');
 if (!settings.currency) settings.currency = settings.showEuro ? '€' : 'kr';
 

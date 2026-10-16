@@ -277,6 +277,7 @@ body {
   width: 30px; height: 30px; cursor: pointer; font-size: 16px; line-height: 30px; text-align: center;
 }
 </style>
+<script src="drive-sync.js"></script>
 </head>
 <body>
 
@@ -392,6 +393,10 @@ body {
     </div>
   </div>
   <div class="settings-section">
+    <h3>☁️ Google Drive</h3>
+    <div id="drive-sync-box" style="padding:4px 0;"></div>
+  </div>
+  <div class="settings-section">
     <h3>Lagring</h3>
     <div class="settings-row">
       <span>Rensa all data</span>
@@ -423,6 +428,11 @@ const DAY = 86400000;
 
 // State
 let items = loadData();
+window.onDriveSyncUpdate = function () {
+  items = loadData();
+  try { renderList(); } catch (e) {}
+  try { renderStats(); } catch (e) {}
+};
 let settings = loadSettings();
 let currentView = 'scan';
 let selectedFile = null;
